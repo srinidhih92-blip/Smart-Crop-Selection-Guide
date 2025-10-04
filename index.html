@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Crop Recommendation (Stepper)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body{
+  font-family:'Poppins',sans-serif;
+  margin:0;padding:0;
+  background:linear-gradient(135deg,#a8edea,#fed6e3);
+  color:#2c3e50;
+  overflow-x:hidden;
+}
+
+/* Background animation */
+.background{
+  position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;
+  background:linear-gradient(to top,#a8edea,#fed6e3);
+}
+.sun{
+  position:absolute;top:50px;right:80px;width:120px;height:120px;
+  background:radial-gradient(circle,#ffec99,#ffd166);border-radius:50%;
+  box-shadow:0 0 50px 20px rgba(255,230,120,0.5);
+  animation:sunMove 12s linear infinite alternate;
+}
+@keyframes sunMove{from{transform:translateY(0);}to{transform:translateY(20px);}}
+
+/* Card container */
+.card{
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(8px);
+  width:450px;max-width:95%;
+  margin:30px auto;
+  padding:25px;
+  border-radius:15px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  animation:fadeIn 0.8s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* Inputs */
+label{display:block;margin-top:12px;font-weight:500;}
+input,select,button{
+  width:100%;padding:8px;margin-top:5px;border-radius:8px;border:1px solid #ccc;
+}
+button{
+  background:linear-gradient(135deg,#27ae60,#2ecc71);
+  color:#fff;border:none;font-weight:600;margin-top:15px;cursor:pointer;
+  transition:0.3s;
+}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 10px rgba(46,204,113,0.4);}
+
+/* Stepper controls */
+.step-buttons{display:flex;justify-content:space-between;margin-top:20px;}
+.step{display:none;}
+.step.active{display:block;}
+
+/* Output card */
+.info-card{
+  background:#f9fdfb;padding:15px;border-radius:10px;
+  box-shadow:0 3px 8px rgba(0,0,0,0.15);text-align:center;
+  animation:fadeIn 1s ease;
+}
+.info-card img{width:100%;max-width:300px;border-radius:10px;margin-top:10px;}
+
+/* Soil description + simulation */
+.soil-preview{
+  text-align:center;
+  margin-top:15px;
+  animation:fadeIn 0.6s ease;
+}
+.soil-preview img{
+  width:250px;height:150px;border-radius:10px;object-fit:cover;
+  box-shadow:0 3px 8px rgba(0,0,0,0.15);
+  transition:transform 0.4s;
+}
+.soil-preview img:hover{transform:scale(1.05);}
+.soil-desc{
+  font-size:14px;color:#333;margin-top:10px;background:#f4f4f4;padding:8px;border-radius:8px;
+}
+
+/* AI simulation glow */
+@keyframes glow {
+  0% {box-shadow: 0 0 10px rgba(39,174,96,0.4);}
+  50% {box-shadow: 0 0 30px rgba(39,174,96,0.7);}
+  100% {box-shadow: 0 0 10px rgba(39,174,96,0.4);}
+}
+.simulation{
+  border:2px solid #27ae60;
+  animation:glow 2s infinite ease-in-out;
+}
+</style>
+</head>
+<body>
+<div class="background"><div class="sun"></div></div>
+
+<div id="app" class="card">
+
+  <!-- Step 1 -->
+  <div class="step active" id="step1">
+    <h2>Login</h2>
+    <label>Username:</label>
+    <input type="text" id="username" placeholder="Enter username">
+    <label>Password:</label>
+    <input type="password" id="password" placeholder="Enter password">
+    <label>Language:</label>
+    <select id="language">
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+    </select>
+    <div class="step-buttons">
+      <button onclick="nextStep(2)">Next ➜</button>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step" id="step2">
+    <h2>Basic Details</h2>
+    <label>Type of Soil:</label>
+    <select id="soil" onchange="showSoilInfo()">
+      <option value="">-- Select --</option>
+      <option value="clay">Clay</option>
+      <option value="sandy">Sandy</option>
+      <option value="loamy">Loamy</option>
+      <option value="black">Black</option>
+    </select>
+    <div id="soilPreview" class="soil-preview"></div>
+
+    <label>Climate:</label>
+    <select id="climate">
+      <option value="summer">Summer</option>
+      <option value="monsoon">Monsoon</option>
+      <option value="winter">Winter</option>
+    </select>
+    <label>Region:</label>
+    <select id="region">
+      <option value="north">North India</option>
+      <option value="south">South India</option>
+      <option value="east">East India</option>
+      <option value="west">West India</option>
+    </select>
+    <div class="step-buttons">
+      <button onclick="prevStep(1)">⬅ Back</button>
+      <button onclick="nextStep(3)">Next ➜</button>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step" id="step3">
+    <h2>Soil Conditions</h2>
+    <label>Water Availability:</label>
+    <select id="water">
+      <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+    </select>
+    <label>Sunlight Intensity:</label>
+    <select id="sunlight">
+      <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+    </select>
+    <label>Soil pH Level:</label>
+    <input type="number" id="ph" step="0.1" min="3" max="10" placeholder="e.g., 6.5">
+    <label>Temperature (°C):</label>
+    <input type="number" id="temperature" placeholder="e.g., 30">
+    <div class="step-buttons">
+      <button onclick="prevStep(2)">⬅ Back</button>
+      <button onclick="nextStep(4)">Next ➜</button>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step" id="step4">
+    <h2>Financial & Minerals</h2>
+    <label>Farmer Budget Level:</label>
+    <select id="budget">
+      <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+    </select>
+    <label>Minerals in Soil:</label><br>
+    <input type="checkbox" id="nitrogen"> Nitrogen
+    <input type="checkbox" id="phosphorus"> Phosphorus
+    <input type="checkbox" id="potassium"> Potassium
+    <div class="step-buttons">
+      <button onclick="prevStep(3)">⬅ Back</button>
+      <button onclick="nextStep(5)">Next ➜</button>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step" id="step5">
+    <h2>Result</h2>
+    <div id="output" class="info-card">Click below to see your crop recommendation.</div>
+    <div class="step-buttons">
+      <button onclick="prevStep(4)">⬅ Back</button>
+      <button onclick="recommend()">Get Recommendation ✅</button>
+    </div>
+    <div class="step-buttons" style="margin-top:10px;">
+      <button onclick="restart()">🔁 Restart</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===== Step Navigation ===== */
+function nextStep(num){
+  const lang = document.getElementById("language").value;
+  if(num===2){
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    if(!username || !password){
+      alert(languageData[lang].loginAlert);
+      return;
+    }
+  }
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step'+num).classList.add('active');
+}
+function prevStep(num){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step'+num).classList.add('active');
+}
+function restart(){location.reload();}
+
+/* ===== Language Data ===== */
+const languageData={
+  en:{
+    loginAlert:"Please enter username and password!",
+    recommendedCrop:"🌾 Recommended Crop:",fertilizer:"💊 Suggested Fertilizer:",
+    marketDemand:"📈 Market Demand:",profit:"💰 Profitability:",
+    sustainability:"🌱 Sustainability:",priceTrend:"📊 Price Trend:",risk:"⚠ Risk Level:"
+  },
+  hi:{
+    loginAlert:"कृपया उपयोगकर्ता नाम और पासवर्ड दर्ज करें!",
+    recommendedCrop:"🌾 सुझाई गई फसल:",fertilizer:"💊 सुझाया गया उर्वरक:",
+    marketDemand:"📈 बाज़ार मांग:",profit:"💰 लाभ:",
+    sustainability:"🌱 स्थिरता:",priceTrend:"📊 मूल्य प्रवृत्ति:",risk:"⚠ जोखिम स्तर:"
+  }
+};
+
+/* ===== Soil Info Simulation ===== */
+function showSoilInfo(){
+  const soilType=document.getElementById("soil").value;
+  const preview=document.getElementById("soilPreview");
+  const soils={
+    clay:{
+      img:"https://images.unsplash.com/photo-1615486368138-2f2a2c9b82a3?w=400",
+      desc:"Clay soil is dense and rich in nutrients but drains slowly. It retains moisture, ideal for crops like rice."
+    },
+    sandy:{
+      img:"https://images.unsplash.com/photo-1593759607773-62e95e06d66a?w=400",
+      desc:"Sandy soil has large particles and drains quickly. It suits crops needing less water like millets or peanuts."
+    },
+    loamy:{
+      img:"https://images.unsplash.com/photo-1595011728554-9b8b92ce0f7b?w=400",
+      desc:"Loamy soil is a perfect balance of sand, silt, and clay—rich in nutrients and well-drained. Great for wheat and vegetables."
+    },
+    black:{
+      img:"https://images.unsplash.com/photo-1600096194521-2e07f83c0ed3?w=400",
+      desc:"Black soil (Regur) is rich in iron and retains moisture well. Ideal for cotton and sugarcane."
+    }
+  };
+  if(soilType && soils[soilType]){
+    const s=soils[soilType];
+    preview.innerHTML=`<div class="simulation">
+      <img src="${s.img}" alt="${soilType} soil">
+      <div class="soil-desc">${s.desc}</div>
+    </div>`;
+  }else{
+    preview.innerHTML="";
+  }
+}
+
+/* ===== Crop Recommendation ===== */
+function recommend(){
+  const soil = document.getElementById("soil").value;
+  const climate = document.getElementById("climate").value;
+  const region = document.getElementById("region").value;
+  const water = document.getElementById("water").value;
+  const sunlight = document.getElementById("sunlight").value;
+  const ph = parseFloat(document.getElementById("ph").value);
+  const budget = document.getElementById("budget").value;
+  const temp = parseFloat(document.getElementById("temperature").value);
+  const lang = document.getElementById("language").value;
+  const data = languageData[lang];
+
+  let crop="Maize 🌽", fertilizer="Balanced NPK", demand="Medium", profit="Medium",
+      sustainability="⭐⭐⭐", priceTrend="Stable", risk="Low";
+
+  if(soil==="clay"&&climate==="monsoon"){crop="Rice 🌾";fertilizer="Urea";demand="High";profit="High";}
+  if(soil==="loamy"&&climate==="winter"){crop="Wheat 🌾";fertilizer="MOP";profit="High";}
+  if(soil==="black"&&region==="west"){crop="Cotton 🌿";fertilizer="NPK";profit="High";risk="High";}
+  if(soil==="sandy"&&climate==="summer"){crop="Millets 🌾";fertilizer="DAP";sustainability="⭐⭐⭐⭐";}
+  if(water==="low") sustainability="⭐⭐⭐⭐⭐";
+  if(sunlight==="low") risk="Medium";
+  if(ph<5.5) crop+=" (Add Lime)";
+  if(budget==="low"&&crop==="Cotton 🌿"){crop="Pulses 🌱";profit="Medium";}
+
+  const images={
+    "Rice 🌾":"https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300",
+    "Millets 🌾":"https://images.unsplash.com/photo-1604394000459-fbe65c0d6a56?w=300",
+    "Cotton 🌿":"https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=300",
+    "Wheat 🌾":"https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=300",
+    "Maize 🌽":"https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=300",
+    "Pulses 🌱":"https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=300"
+  };
+
+  document.getElementById("output").innerHTML=`
+    <h3>${data.recommendedCrop} ${crop}</h3>
+    <img src="${images[crop.split(' (')[0]]||''}" alt="${crop}">
+    <p>${data.fertilizer} ${fertilizer}</p>
+    <p>${data.marketDemand} <b>${demand}</b></p>
+    <p>${data.profit} <b>${profit}</b></p>
+    <p>${data.sustainability} ${sustainability}</p>
+    <p>${data.priceTrend} ${priceTrend}</p>
+    <p>${data.risk} ${risk}</p>`;
+}
+</script>
+</body>
+</html>
